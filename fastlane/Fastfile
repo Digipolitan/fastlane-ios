@@ -69,9 +69,19 @@ lane :appfile_init do |options|
     if xcodeproj == nil
       UI.user_error! "No xcodeproj found on the root project directory"
     end
-    plist_path = "Info.plist"
-    if !File.exists?(plist_path)
-      plist_path = File.join(File.basename(xcodeproj, ".xcodeproj"), plist_path)
+    plist_name = "Info.plist"
+    plist_paths = [".", File.basename(xcodeproj, ".xcodeproj"), "Sources"]
+    plist_path = nil
+    i = 0
+    while i < plist_paths.length do
+      plist_path = File.join(plist_paths[i], plist_name)
+      if File.exists?(plist_path)
+        break
+      end
+      i += 1
+    end
+    if i == plist_paths.length
+      UI.user_error! "Cannot find the Info.plist file"
     end
     loop do
       app_identifier = UI.input("New App identifier ?")
