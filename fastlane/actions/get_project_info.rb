@@ -41,6 +41,7 @@ module Fastlane
             return plist_path
           end
           plist_path = File.join(directory, plist_path)
+          UI.message(plist_path)
           if File.exists?(plist_path)
             return plist_path
           end
