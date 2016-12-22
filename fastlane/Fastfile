@@ -39,7 +39,7 @@ lane :appfile_init do |options|
     fields.push({
       name: "App identifier",
       value: CredentialsManager::AppfileConfig.try_fetch_value(:app_identifier),
-      lane_context: :APPFILE_APP_IDENTIFIER
+      lane_context: :APPFILE_APP_IDENTIFIER,
       optional: false
     })
   end
