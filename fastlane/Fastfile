@@ -74,8 +74,11 @@ lane :appfile_init do |options|
     plist_path = nil
     i = 0
     while i < plist_paths.length do
-      plist_path = File.join(plist_paths[i], plist_name)
-      if File.exists?(plist_path)
+      if files = files_matching(
+        pattern: plist_name,
+        directory: plist_paths[i]
+        )
+        plist_path = files[0]
         break
       end
       i += 1
