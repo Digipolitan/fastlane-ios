@@ -1,0 +1,124 @@
+lane :prepare_for_release do |options|
+  ensure_git_status_clean()
+  ensure_git_flow_init()
+  prepare_lane_options(
+    options: options,
+    mapping: {
+      :project => {:env_var => "DG_PROJECT"}
+    }
+  )
+  develop_branch = git_get_develop_branch()
+  if git_branch() != develop_branch
+    UI.user_error! "You must run this lane on the '#{develop_branch}' only"
+  end
+  version_number = get_version_number(xcodeproj: options[:project])
+  build_number = get_build_number(xcodeproj: options[:project])
+  ensure_version_availability(
+    current_version_number: version_number,
+    current_build_number: build_number
+  )
+  version_number = lane_context[SharedValues::NEXT_VERSION_NUMBER]
+  build_number = lane_context[SharedValues::NEXT_BUILD_NUMBER]
+  if !UI.confirm("Are you sure to submit release version '#{version_number}' build ##{build_number} ?")
+    UI.user_error! "User abort the release"
+  end
+end
+
+lane :appfile_init do |options|
+  app_identifier = nil
+  apple_id = nil
+  team_name = nil
+  itc_team_name = nil
+  prepare_lane_options(
+    options: options,
+    mapping: {
+      :fetch_app_identifier => { default_value: 1 },
+      :fetch_apple_id => { default_value: 1 },
+      :fetch_team_name => { default_value: 1 },
+      :fetch_itc_team_name => { default_value: 1 }
+    }
+  )
+  if File.exists?("Appfile")
+    dialog = ""
+    if options[:fetch_app_identifier] && app_identifier = CredentialsManager::AppfileConfig.try_fetch_value(:app_identifier)
+      lane_context[:APPFILE_APP_IDENTIFIER] = app_identifier
+      dialog += "* app_identifier : (#{app_identifier})\n"
+    end
+    if options[:fetch_apple_id] && apple_id = CredentialsManager::AppfileConfig.try_fetch_value(:apple_id)
+      lane_context[:APPFILE_APPLE_ID] = apple_id
+      dialog += "* apple_id       : (#{apple_id})\n"
+    end
+    if options[:fetch_team_name] && team_name = CredentialsManager::AppfileConfig.try_fetch_value(:team_name)
+      lane_context[:APPFILE_TEAM_NAME] = team_name
+      dialog += "* team_name      : (#{team_name})\n"
+    end
+    if options[:fetch_itc_team_name] && itc_team_name = CredentialsManager::AppfileConfig.try_fetch_value(:itc_team_name)
+      lane_context[:APPFILE_ITC_TEAM_NAME] = team_name
+      dialog += "* itc_team_name  : (#{itc_team_name})\n"
+    end
+    dialog += "Would you like to update these following Appfile informations ?"
+    if !UI.confirm(dialog)
+      next
+    end
+  end
+  if options[:fetch_app_identifier] && (app_identifier == nil || UI.confirm("Would you like to change the App identifier '#{app_identifier}' ?"))
+    xcodeproj = nil
+    if projects = files_matching(pattern: "*.xcodeproj")
+      xcodeproj = projects.first
+    end
+    if xcodeproj == nil
+      UI.user_error! "No xcodeproj found on the root project directory"
+    end
+    plist_path = "Info.plist"
+    if !File.exists?(plist_path)
+      plist_path = File.join(File.basename(xcodeproj, ".xcodeproj"), plist_path)
+    end
+    loop do
+      app_identifier = UI.input("New App identifier ?")
+      break if app_identifier.length > 0
+    end
+    lane_context[:APPFILE_APP_IDENTIFIER] = app_identifier
+    update_app_identifier(
+      app_identifier: app_identifier,
+      xcodeproj: xcodeproj,
+      plist_path: plist_path
+    )
+  end
+  if options[:fetch_apple_id] && (apple_id == nil || UI.confirm("Would you like to change the Apple ID '#{apple_id}' ?"))
+    apple_id = UI.input("New Apple ID ? [Press enter to ignore]")
+    if apple_id.length() > 0
+      apple_id = nil
+    end
+    lane_context[:APPFILE_APPLE_ID] = apple_id
+  end
+  if options[:fetch_team_name] && (team_name == nil || UI.confirm("Would you like to change the Dev Portal Team name '#{team_name}' ?"))
+    team_name = UI.input("New Dev Portal Team name ? [Press enter to ignore]")
+    if team_name.length() > 0
+      team_name = nil
+    end
+    lane_context[:APPFILE_TEAM_NAME] = team_name
+  end
+  if options[:fetch_itc_team_name] && (itc_team_name == nil || UI.confirm("Would you like to change the iTunes Connect Team name '#{itc_team_name}' ?"))
+    itc_team_name = UI.input("New iTunes Connect Team name ? [Press enter to ignore]")
+    if itc_team_name.length() > 0
+      itc_team_name = nil
+    end
+    lane_context[:APPFILE_ITC_TEAM_NAME] = itc_team_name
+  end
+  app_file_data = ""
+  if app_identifier != nil
+    app_file_data += "app_identifier \"#{app_identifier}\" # The bundle identifier of your app\n"
+  end
+  if apple_id != nil
+    app_file_data += "apple_id \"#{apple_id}\" # Your Apple email address\n"
+  end
+  if team_name != nil
+    app_file_data += "team_name \"#{team_name}\"\n"
+  end
+  if itc_team_name != nil
+    app_file_data += "itc_team_name \"#{itc_team_name}\"\n"
+  end
+  File.open("Appfile", "w") { |file|
+    file.puts(app_file_data)
+  }
+end
