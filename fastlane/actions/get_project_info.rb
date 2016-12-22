@@ -18,7 +18,7 @@ module Fastlane
           Actions::lane_context[SharedValues::XCODEPROJ_PATH] = project_path
           project_name = File.basename(project_path, ".xcodeproj")
           Actions::lane_context[SharedValues::PROJECT_NAME] = project_name
-          plist_path = self.get_plist_path(project_name)
+          plist_path = self.get_plist_path(project_path, project_name)
           Actions::lane_context[SharedValues::PLIST_PATH] = plist_path
           return {
             xcodeproj: project_path,
@@ -26,16 +26,21 @@ module Fastlane
             plist_path: plist_path
           }
         else
-          UI.user_error! "Cannot retrieve xcodeproj"
+          UI.user_error! "Cannot retrieves xcodeproj"
         end
       end
 
-      def self.get_plist_path(project_name)
+      def self.get_plist_path(project_path, project_name)
+        directory = File.dirname(project_path)
         plist_name = "Info.plist"
-        plist_paths = [project_name, "Sources", "."]
+        plist_paths = [project_name, "Sources", ""]
         i = 0
         while i < plist_paths.length do
           plist_path = File.join(plist_paths[0], plist_name)
+          if File.exists?(plist_path)
+            return plist_path
+          end
+          plist_path = File.join(directory, plist_path)
           if File.exists?(plist_path)
             return plist_path
           end
