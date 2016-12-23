@@ -54,7 +54,7 @@ module Fastlane
       #####################################################
 
       def self.description
-        "Retrieves the project name"
+        "Retrieves the project information"
       end
 
       def self.available_options

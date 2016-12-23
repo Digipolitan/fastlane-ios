@@ -35,10 +35,12 @@ lane :appfile_init do |options|
     }
   )
   fields = []
+  app_identifier = nil
   if options[:fetch_app_identifier] == 1
+    app_identifier = CredentialsManager::AppfileConfig.try_fetch_value(:app_identifier)
     fields.push({
       name: "App identifier",
-      value: CredentialsManager::AppfileConfig.try_fetch_value(:app_identifier),
+      value: app_identifier,
       lane_context: :APPFILE_APP_IDENTIFIER,
       optional: false
     })
