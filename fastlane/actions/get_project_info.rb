@@ -37,11 +37,7 @@ module Fastlane
         i = 0
         while i < plist_paths.length do
           plist_path = File.join(plist_paths[i], plist_name)
-          if File.exists?(plist_path)
-            return plist_path
-          end
-          plist_path = File.join(directory, plist_path)
-          if File.exists?(plist_path)
+          if File.exists?(File.join(directory, plist_path))
             return plist_path
           end
           i += 1
