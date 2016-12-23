@@ -28,7 +28,7 @@ lane :appfile_init do |options|
   prepare_lane_options(
     options: options,
     mapping: {
-      :xcodeproj => { env_var: "XCODEPROJ" }
+      :xcodeproj => { env_var: "XCODEPROJ" },
       :fetch_app_identifier => { default_value: 1 },
       :fetch_apple_id => { default_value: 1 },
       :fetch_team_name => { default_value: 1 },
