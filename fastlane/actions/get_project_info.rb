@@ -2,36 +2,36 @@ module Fastlane
   module Actions
     module SharedValues
       PROJECT_NAME = :PROJECT_NAME
-      XCODEPROJ_PATH = :XCODEPROJ_PATH
-      PLIST_PATH = :PLIST_PATH
+      XCODEPROJ = :XCODEPROJ
+      INFO_PLIST = :INFO_PLIST
     end
 
     class GetProjectInfoAction < Action
       def self.run(params)
-        project_path = params[:xcodeproj]
-        if project_path == nil
+        xcodeproj = params[:xcodeproj]
+        if xcodeproj == nil
           if projects = Dir["*.xcodeproj"]
-            project_path = projects.first
+            xcodeproj = projects.first
           end
         end
-        if project_path != nil
-          Actions::lane_context[SharedValues::XCODEPROJ_PATH] = project_path
-          project_name = File.basename(project_path, ".xcodeproj")
+        if xcodeproj != nil
+          Actions::lane_context[SharedValues::XCODEPROJ] = xcodeproj
+          project_name = File.basename(xcodeproj, ".xcodeproj")
           Actions::lane_context[SharedValues::PROJECT_NAME] = project_name
-          plist_path = self.get_plist_path(project_path, project_name)
-          Actions::lane_context[SharedValues::PLIST_PATH] = plist_path
+          info_plist = self.get_info_plist(xcodeproj, project_name)
+          Actions::lane_context[SharedValues::INFO_PLIST] = info_plist
           return {
-            xcodeproj: project_path,
+            xcodeproj: xcodeproj,
             name: project_name,
-            plist_path: plist_path
+            info_plist: info_plist
           }
         else
           UI.user_error! "Cannot retrieves xcodeproj"
         end
       end
 
-      def self.get_plist_path(project_path, project_name)
-        directory = File.dirname(project_path)
+      def self.get_info_plist(xcodeproj, project_name)
+        directory = File.dirname(xcodeproj)
         plist_name = "Info.plist"
         plist_paths = [project_name, "Sources", ""]
         i = 0
@@ -60,7 +60,7 @@ module Fastlane
       def self.available_options
         [
           FastlaneCore::ConfigItem.new(key: :xcodeproj,
-                                       env_name: "XCODEPROJ_PATH",
+                                       env_name: "XCODEPROJ",
                                        description: "The xcodeoproj path",
                                        optional: true)
         ]
@@ -69,8 +69,8 @@ module Fastlane
       def self.output
         [
           ['PROJECT_NAME', 'The project name'],
-          ['XCODEPROJ_PATH', 'The xcodeproj path'],
-          ['PLIST_PATH', 'The plist path']
+          ['XCODEPROJ', 'The xcodeproj path'],
+          ['INFO_PLIST', 'The plist path']
         ]
       end
 
@@ -79,7 +79,7 @@ module Fastlane
       end
 
       def self.authors
-        ["bbriatte"]
+        ["bbriatte", "vbalasubramaniam"]
       end
 
       def self.is_supported?(platform)

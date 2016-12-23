@@ -4,15 +4,15 @@ lane :prepare_for_release do |options|
   prepare_lane_options(
     options: options,
     mapping: {
-      :project => {:env_var => "DG_PROJECT"}
+      :xcodeproj => {:env_var => "XCODEPROJ"}
     }
   )
   develop_branch = git_get_develop_branch()
   if git_branch() != develop_branch
     UI.user_error! "You must run this lane on the '#{develop_branch}' only"
   end
-  version_number = get_version_number(xcodeproj: options[:project])
-  build_number = get_build_number(xcodeproj: options[:project])
+  version_number = get_version_number(xcodeproj: options[:xcodeproj])
+  build_number = get_build_number(xcodeproj: options[:xcodeproj])
   ensure_version_availability(
     current_version_number: version_number,
     current_build_number: build_number
@@ -28,6 +28,7 @@ lane :appfile_init do |options|
   prepare_lane_options(
     options: options,
     mapping: {
+      :xcodeproj => { env_var: "XCODEPROJ" }
       :fetch_app_identifier => { default_value: 1 },
       :fetch_apple_id => { default_value: 1 },
       :fetch_team_name => { default_value: 1 },
@@ -68,11 +69,11 @@ lane :appfile_init do |options|
   end
   user_validation(fields: fields)
   if app_identifier != Actions.lane_context[:APPFILE_APP_IDENTIFIER]
-    project_info = get_project_info()
+    project_info = get_project_info(xcodeproj: options[:xcodeproj])
     update_app_identifier(
       app_identifier: Actions.lane_context[:APPFILE_APP_IDENTIFIER],
       xcodeproj: project_info[:xcodeproj],
-      plist_path: project_info[:plist_path]
+      plist_path: project_info[:info_plist]
     )
   end
   app_file_data = ""
