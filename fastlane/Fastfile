@@ -1,73 +1,54 @@
-lane :prepare_for_release do |options|
-  ensure_git_status_clean()
-  ensure_git_flow_init()
-  prepare_lane_options(
-    options: options,
-    mapping: {
-      :xcodeproj => {:env_var => "XCODEPROJ"}
-    }
-  )
-  develop_branch = git_get_develop_branch()
-  if git_branch() != develop_branch
-    UI.user_error! "You must run this lane on the '#{develop_branch}' only"
-  end
-  version_number = get_version_number(xcodeproj: options[:xcodeproj])
-  build_number = get_build_number(xcodeproj: options[:xcodeproj])
-  ensure_version_availability(
-    current_version_number: version_number,
-    current_build_number: build_number
-  )
-  version_number = lane_context[SharedValues::NEXT_VERSION_NUMBER]
-  build_number = lane_context[SharedValues::NEXT_BUILD_NUMBER]
-  if !UI.confirm("Are you sure to submit release version '#{version_number}' build ##{build_number} ?")
-    UI.user_error! "User abort the release"
-  end
-end
-
+desc "Init the Fastlane Appfile with a user interaction"
+desc "#### How to install ?"
+desc "This lane require actions define in [Digipolitan/fastlane-common](https://github.com/Digipolitan/fastlane-common)"
+desc "```\nimport_from_git(\n  url: 'https://github.com/Digipolitan/fastlane-common'\n)\n```"
+desc "#### Example : Fetch only the app_identifier"
+desc "```\nfastlane appfile_init fetch_app_identifier:false\n```"
+desc "#### Options"
+desc "* __**xcodeproj**__: The Xcode project path, if the project isn't in your root directory"
+desc "  * **environment_variable**: XCODEPROJ"
+desc "  * **type**: string"
+desc "  * **optional**: true"
+desc "* __**fetch_app_identifier**__: Ask the user about the app_identifier"
+desc "  * **type**: boolean"
+desc "  * **default_value**: true"
+desc "* __**fetch_apple_id**__: Ask the user about the apple account"
+desc "  * **type**: boolean"
+desc "  * **default_value**: true"
+desc "* __**fetch_team_name**__: Ask the user about the Dev Portal Team"
+desc "  * **type**: boolean"
+desc "  * **default_value**: true"
+desc "* __**fetch_itc_team_name**__: Ask the user about the iTunes Connect Team"
+desc "  * **type**: boolean"
+desc "  * **default_value**: true"
+desc ""
 lane :appfile_init do |options|
   prepare_lane_options(
     options: options,
-    mapping: {
-      :xcodeproj => { env_var: "XCODEPROJ" },
-      :fetch_app_identifier => { default_value: 1 },
-      :fetch_apple_id => { default_value: 1 },
-      :fetch_team_name => { default_value: 1 },
-      :fetch_itc_team_name => { default_value: 1 }
-    }
+    bind_params: [
+      Actions::BindParamBuilder.new(:xcodeproj).env_var("XCODEPROJ").build(),
+      Actions::BindParamBuilder.new(:fetch_app_identifier).default_value(true).build(),
+      Actions::BindParamBuilder.new(:fetch_apple_id).default_value(true).build(),
+      Actions::BindParamBuilder.new(:fetch_team_name).default_value(true).build(),
+      Actions::BindParamBuilder.new(:fetch_itc_team_name).default_value(true).build()
+    ]
   )
-  fields = []
+  bind_params = []
   app_identifier = nil
-  if options[:fetch_app_identifier] == 1
+  if options[:fetch_app_identifier] == true
     app_identifier = CredentialsManager::AppfileConfig.try_fetch_value(:app_identifier)
-    fields.push({
-      name: "App identifier",
-      value: app_identifier,
-      lane_context: :APPFILE_APP_IDENTIFIER,
-      optional: false
-    })
+    bind_params.push(Actions::BindParamBuilder.new("App identifier").lane_context(:APPFILE_APP_IDENTIFIER).default_value(app_identifier).required().build())
   end
-  if options[:fetch_apple_id] == 1
-    fields.push({
-      name: "Apple ID",
-      value: CredentialsManager::AppfileConfig.try_fetch_value(:apple_id),
-      lane_context: :APPFILE_APPLE_ID
-    })
+  if options[:fetch_apple_id] == true
+    bind_params.push(Actions::BindParamBuilder.new("Apple ID").lane_context(:APPFILE_APPLE_ID).default_value(CredentialsManager::AppfileConfig.try_fetch_value(:apple_id)).build())
   end
-  if options[:fetch_team_name] == 1
-    fields.push({
-      name: "Team name",
-      value: CredentialsManager::AppfileConfig.try_fetch_value(:team_name),
-      lane_context: :APPFILE_TEAM_NAME
-    })
+  if options[:fetch_team_name] == true
+    bind_params.push(Actions::BindParamBuilder.new("Team name").lane_context(:APPFILE_TEAM_NAME).default_value(CredentialsManager::AppfileConfig.try_fetch_value(:team_name)).build())
   end
-  if options[:fetch_itc_team_name] == 1
-    fields.push({
-      name: "iTunes Connect Team name",
-      value: CredentialsManager::AppfileConfig.try_fetch_value(:itc_team_name),
-      lane_context: :APPFILE_ITC_TEAM_NAME
-    })
+  if options[:fetch_itc_team_name] == true
+    bind_params.push(Actions::BindParamBuilder.new("iTunes Connect Team name").lane_context(:APPFILE_ITC_TEAM_NAME).default_value(CredentialsManager::AppfileConfig.try_fetch_value(:itc_team_name)).build())
   end
-  user_validation(fields: fields)
+  user_validation(bind_params: bind_params)
   if app_identifier != Actions.lane_context[:APPFILE_APP_IDENTIFIER]
     project_info = get_project_info(xcodeproj: options[:xcodeproj])
     update_app_identifier(
