@@ -26,7 +26,7 @@ module Fastlane
             info_plist: info_plist
           }
         else
-          UI.user_error! "Cannot retrieves xcodeproj"
+          UI.user_error! "Xcodeproj not found"
         end
       end
 
@@ -50,7 +50,7 @@ module Fastlane
       #####################################################
 
       def self.description
-        "Retrieves the project information"
+        "Retrieves project information"
       end
 
       def self.available_options
@@ -71,7 +71,7 @@ module Fastlane
       end
 
       def self.return_value
-        "An hash containing information about the project such as the name, the plist path and the xcodeproj path"
+        "Dictionary containing information about the project such as the name, the plist path and the xcodeproj path"
       end
 
       def self.authors
