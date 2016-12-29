@@ -62,6 +62,63 @@ fastlane appfile_init fetch_app_identifier:false
   * **default_value**: true
 
 
+### run_tests
+```
+fastlane run_tests
+```
+Build and run all Xcode tests
+
+#### Example:
+
+```
+fastlane tests workspace:NAME.xcworkspace
+```
+
+#### How to install ?
+
+This lane require actions define in [Digipolitan/fastlane-common](https://github.com/Digipolitan/fastlane-common)
+
+```
+import_from_git(
+  url: 'https://github.com/Digipolitan/fastlane-common'
+)
+```
+
+#### Options
+
+* __**test_scheme**__: The scheme into the Xcode project to execute, the scheme is required on the CI environement
+
+  * **environment_variable**: TEST_SCHEME
+
+  * **type**: string
+
+  * **optional**: true
+
+* __**xcworkspace**__: The workspace to use.
+
+  * **environment_variable**: XCWORKSPACE
+
+  * **type**: string
+
+  * **optional**: true
+
+* __**xcodeproj**__: The Xcode project to select
+
+  * **environment_variable**: XCODEPROJ
+
+  * **type**: string
+
+  * **optional**: true
+
+#### Environment variables
+
+* __**SLACK_URL**__: The slack Hook URL
+
+  * **type**: string
+
+  * **optional**: true
+
+
 
 ----
 
