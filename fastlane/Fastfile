@@ -27,10 +27,10 @@ lane :appfile_init do |options|
     options: options,
     bind_params: [
       Actions::BindParamBuilder.new(:xcodeproj).env_var("XCODEPROJ").build(),
-      Actions::BindParamBuilder.new(:fetch_app_identifier).transform(BindParamTransform::Boolean).default_value(true).build(),
-      Actions::BindParamBuilder.new(:fetch_apple_id).transform(BindParamTransform::Boolean).default_value(true).build(),
-      Actions::BindParamBuilder.new(:fetch_team_name).transform(BindParamTransform::Boolean).default_value(true).build(),
-      Actions::BindParamBuilder.new(:fetch_itc_team_name).transform(BindParamTransform::Boolean).default_value(true).build()
+      Actions::BindParamBuilder.new(:fetch_app_identifier).transform(Actions::BindParamTransform::Boolean).default_value(true).build(),
+      Actions::BindParamBuilder.new(:fetch_apple_id).transform(Actions::BindParamTransform::Boolean).default_value(true).build(),
+      Actions::BindParamBuilder.new(:fetch_team_name).transform(Actions::BindParamTransform::Boolean).default_value(true).build(),
+      Actions::BindParamBuilder.new(:fetch_itc_team_name).transform(Actions::BindParamTransform::Boolean).default_value(true).build()
     ]
   )
   bind_params = []
