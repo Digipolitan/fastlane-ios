@@ -109,7 +109,9 @@ lane :run_tests do |options|
     ]
   )
   if files_matching(pattern: "Podfile") != nil
-    cocoapods()
+    cocoapods(
+      repo_update: true
+    )
   end
   scan(
     workspace: options[:xcworkspace],
