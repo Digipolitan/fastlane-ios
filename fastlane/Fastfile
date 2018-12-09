@@ -87,8 +87,8 @@ desc "#### How to install ?"
 desc "This lane require actions define in [Digipolitan/fastlane-common](https://github.com/Digipolitan/fastlane-common)"
 desc "```\nimport_from_git(\n  url: 'https://github.com/Digipolitan/fastlane-common'\n)\n```"
 desc "#### Options"
-desc "* __**test_scheme**__: The scheme into the Xcode project to execute, the scheme is required on the CI environement"
-desc "  * **environment_variable**: TEST_SCHEME"
+desc "* __**target_scheme**__: The scheme into the Xcode project to execute, the scheme is required on the CI environement"
+desc "  * **environment_variable**: TARGET_SCHEME"
 desc "  * **type**: string"
 desc "  * **optional**: true"
 desc "* __**xcworkspace**__: The workspace to use."
@@ -104,11 +104,11 @@ desc "* __**SLACK_URL**__: The slack Hook URL"
 desc "  * **type**: string"
 desc "  * **optional**: true"
 desc ""
-lane :run_tests do |options|
+lane :tests do |options|
   prepare_lane_options(
     options: options,
     bind_params: [
-      Actions::BindParamBuilder.new(:test_scheme).env_var("TEST_SCHEME").ci_required().build(),
+      Actions::BindParamBuilder.new(:target_scheme).env_var("TARGET_SCHEME").ci_required().build(),
       Actions::BindParamBuilder.new(:xcworkspace).env_var("XCWORKSPACE").build(),
       Actions::BindParamBuilder.new(:xcodeproj).env_var("XCODEPROJ").build()
     ]
@@ -121,7 +121,7 @@ lane :run_tests do |options|
   scan(
     workspace: options[:xcworkspace],
     project: options[:xcodeproj],
-    scheme: options[:test_scheme],
+    scheme: options[:target_scheme],
     slack_only_on_failure: (git_branch() != git_get_master_branch()),
     clean: true
   )
